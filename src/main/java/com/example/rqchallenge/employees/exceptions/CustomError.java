@@ -11,6 +11,7 @@ public enum CustomError {
     INVALID_OR_MISSING_AGE("E008", "Invalid or missing age"),
     NEGATIVE_AGE_ERROR("E009", "Age cannot be less than zero"),
     AGE_MORE_THAN_100_ERROR("E010", "Age cannot be more than hundred"),
+    ID_CAN_NOT_BE_NULL("E011", "Id cannot be null"),
     GENERAL_ERROR("E999", "An unexpected error occurred");
 
     private final String code;

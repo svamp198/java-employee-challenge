@@ -9,7 +9,6 @@ import com.example.rqchallenge.employees.models.CreateEmployeeDTO;
 import com.example.rqchallenge.employees.models.Employee;
 import com.example.rqchallenge.employees.validator.CreateEmployeeInputValidator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -65,6 +64,8 @@ public class EmployeeService {
     }
 
     public Employee getEmployeeById(String id) {
+        if(id == null)
+            throw new ValidationException(CustomError.ID_CAN_NOT_BE_NULL);
         Employee employee = employeeAPI.getEmployeeById(id);
         if(employee == null)
             throw new CustomException(CustomError.NO_DATA_FOUND);
@@ -73,7 +74,17 @@ public class EmployeeService {
     }
 
     public CreateEmployee createEmployee(Map<String, Object> employeeInput) {
-            CreateEmployeeDTO createEmployeeDTO = CreateEmployeeInputValidator.convertAndValidateEmployeeInput(employeeInput);
-            return employeeAPI.createEmployee(createEmployeeDTO);
+        CreateEmployeeDTO createEmployeeDTO = CreateEmployeeInputValidator.convertAndValidateEmployeeInput(employeeInput);
+        CreateEmployee createEmployee = employeeAPI.createEmployee(createEmployeeDTO);
+        log.info("Successfully created Employee with id : {}", createEmployee);
+        return createEmployee;
+    }
+
+    public String deleteEmployee(String id) {
+        if(id == null)
+            throw new ValidationException(CustomError.ID_CAN_NOT_BE_NULL);
+        Employee employeeToBeDeleted = getEmployeeById(id);
+        employeeAPI.deleteEmployee(employeeToBeDeleted);
+        return employeeToBeDeleted.getName();
     }
 }

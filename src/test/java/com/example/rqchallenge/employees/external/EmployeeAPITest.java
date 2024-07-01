@@ -11,10 +11,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+
 import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -195,5 +202,45 @@ public class EmployeeAPITest {
         assertEquals(CustomError.JSON_PROCESSING_ERROR, exception.getError());
         assertEquals("Error while processing JSON", exception.getMessage());
         assertEquals("E002", exception.getError().getCode());
+    }
+
+    @Test
+    void deleteEmployee_Success() {
+        Employee employee = new Employee("1", "Virat Kohli", "30", "50000");
+        String jsonResponse = "successfully! deleted Record";
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.DELETE), isNull(), eq(String.class)))
+                .thenReturn(ResponseEntity.ok(jsonResponse));
+
+        String result = employeeAPI.deleteEmployee(employee);
+
+        assertEquals("Virat Kohli", result);
+    }
+
+    @Test
+    void deleteEmployee_FailureResponse() {
+        Employee employee = new Employee("1", "Virat Kohli", "30", "50000");
+        String jsonResponse = "failed to delete Record";
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.DELETE), isNull(), eq(String.class)))
+                .thenReturn(ResponseEntity.ok(jsonResponse));
+
+        String result = employeeAPI.deleteEmployee(employee);
+
+        assertEquals("failed", result);
+    }
+
+    @Test
+    void deleteEmployee_RestClientException() {
+        Employee employee = new Employee("1", "Virat Kohli", "30", "50000");
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.DELETE), isNull(), eq(String.class)))
+                .thenThrow(new RestClientException("Error"));
+
+        CustomException exception = assertThrows(CustomException.class, () -> {
+            employeeAPI.deleteEmployee(employee);
+        });
+
+        assertEquals(CustomError.REST_CLIENT_ERROR.getMessage(), exception.getMessage());
     }
 }

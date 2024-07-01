@@ -2,9 +2,8 @@ package com.example.rqchallenge.employees.controllers;
 
 import com.example.rqchallenge.employees.exceptions.CustomError;
 import com.example.rqchallenge.employees.exceptions.CustomException;
+import com.example.rqchallenge.employees.exceptions.ValidationException;
 import com.example.rqchallenge.employees.models.CreateEmployee;
-import com.example.rqchallenge.employees.models.CreateEmployeeDTO;
-import com.example.rqchallenge.employees.models.CreateEmployeeResponse;
 import com.example.rqchallenge.employees.models.Employee;
 import com.example.rqchallenge.employees.service.EmployeeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,8 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -172,4 +170,37 @@ public class EmployeeControllerImplementationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(objectMapper.writeValueAsString(createEmployee)));
     }
+
+    @Test
+    void addEmployee_ValidationException() throws Exception {
+        Map<String, Object> employeeInput = new HashMap<>();
+        employeeInput.put("salary", "50000");
+        employeeInput.put("age", "30");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = objectMapper.writeValueAsString(employeeInput);
+
+        when(employeeService.createEmployee(employeeInput)).thenThrow(new ValidationException(CustomError.INVALID_OR_MISSING_NAME));
+
+        String createEmployeeUrl = baseUrl + "/create";
+        mockMvc.perform(post(createEmployeeUrl)
+                        .contentType("application/json")
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().json("{\"error\":\"E005\",\"message\":\"Invalid or missing name\"}"));
+    }
+
+    @Test
+    void deleteEmployeeById_Success() throws Exception {
+        String id = "1";
+        String employeeName = "John Doe";
+
+        when(employeeService.deleteEmployee(id)).thenReturn(employeeName);
+
+        String deleteEmployeeUrl = baseUrl + "/employee/{id}";
+        mockMvc.perform(delete(deleteEmployeeUrl, id))
+                .andExpect(status().isOk())
+                .andExpect(content().string(employeeName));
+    }
+
 }

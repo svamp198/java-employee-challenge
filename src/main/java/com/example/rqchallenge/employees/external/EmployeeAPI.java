@@ -6,6 +6,7 @@ import com.example.rqchallenge.employees.models.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -81,6 +82,18 @@ public class EmployeeAPI {
         } catch (JsonProcessingException e) {
             log.error("Error while parsing employees response " + e.getMessage(), e);
             throw new CustomException(CustomError.JSON_PROCESSING_ERROR);
+        }
+    }
+
+    public String deleteEmployee(Employee employeeToBeDeleted) {
+        try {
+            String id = employeeToBeDeleted.getId();
+            String externalUrl = BASE_URL + "/delete/" + id;
+            String response = restTemplate.exchange(externalUrl, HttpMethod.DELETE, null, String.class).getBody();
+            return response.contains("successfully! deleted Record") ? employeeToBeDeleted.getName() : "failed";
+        }  catch (RestClientException e) {
+            log.error("Error while fetching all employees " + e.getMessage(), e);
+            throw new CustomException(CustomError.REST_CLIENT_ERROR);
         }
     }
 }

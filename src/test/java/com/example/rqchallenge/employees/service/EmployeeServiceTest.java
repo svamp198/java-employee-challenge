@@ -1,6 +1,8 @@
 package com.example.rqchallenge.employees.service;
 
+import com.example.rqchallenge.employees.exceptions.CustomError;
 import com.example.rqchallenge.employees.exceptions.CustomException;
+import com.example.rqchallenge.employees.exceptions.ValidationException;
 import com.example.rqchallenge.employees.external.EmployeeAPI;
 import com.example.rqchallenge.employees.models.*;
 import com.example.rqchallenge.employees.validator.CreateEmployeeInputValidator;
@@ -197,6 +199,17 @@ public class EmployeeServiceTest {
     }
 
     @Test
+    void getEmployeesById_IdIsNull() {
+        String id = null;
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> {
+            employeeService.getEmployeeById(id);
+        });
+
+        assertEquals(CustomError.ID_CAN_NOT_BE_NULL.getMessage(), exception.getError().getMessage());
+    }
+
+    @Test
     void createEmployee_Success() {
         Map<String, Object> employeeInput = new HashMap<>();
         employeeInput.put("name", "John Doe");
@@ -210,5 +223,28 @@ public class EmployeeServiceTest {
 
         assertNotNull(createEmployeeFromServer);
         assertEquals(createEmployee,createEmployeeFromServer);
+    }
+
+    @Test
+    void deleteEmployee() {
+        Employee virat = new Employee("1","Virat Kohli","30","50000");
+        EmployeeResponse employeeResponse = new EmployeeResponse("success", List.of(virat));
+        when(employeeAPI.getEmployeeById("1")).thenReturn(employeeResponse.getData().get(0));
+        when(employeeAPI.deleteEmployee(virat)).thenReturn(virat.getName());
+
+        String name = employeeService.deleteEmployee("1");
+
+        assertEquals(virat.getName(), name);
+    }
+
+    @Test
+    void deleteEmployee_IdIsNull() {
+        String id = null;
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> {
+            employeeService.deleteEmployee(id);
+        });
+
+        assertEquals(CustomError.ID_CAN_NOT_BE_NULL.getMessage(), exception.getError().getMessage());
     }
 }

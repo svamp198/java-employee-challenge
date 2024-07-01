@@ -1,6 +1,7 @@
 package com.example.rqchallenge.employees.controlleradvice;
 
 import com.example.rqchallenge.employees.exceptions.CustomException;
+import com.example.rqchallenge.employees.exceptions.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,15 @@ public class EmployeeControllerAdvice {
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("error", ex.getError().getCode());
         errorResponse.put("message", ex.getMessage());
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<Map<String, String>> handleValidationException(ValidationException ex) {
+        logger.info("handling ValidationException because " + ex.getMessage());
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getError().getCode());
+        errorResponse.put("message", ex.getError().getMessage());
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
