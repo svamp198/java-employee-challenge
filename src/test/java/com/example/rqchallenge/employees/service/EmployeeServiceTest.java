@@ -2,14 +2,17 @@ package com.example.rqchallenge.employees.service;
 
 import com.example.rqchallenge.employees.exceptions.CustomException;
 import com.example.rqchallenge.employees.external.EmployeeAPI;
-import com.example.rqchallenge.employees.models.Employee;
-import com.example.rqchallenge.employees.models.EmployeeResponse;
+import com.example.rqchallenge.employees.models.*;
+import com.example.rqchallenge.employees.validator.CreateEmployeeInputValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -191,5 +194,21 @@ public class EmployeeServiceTest {
         });
         assertEquals("No Employees found", exception.getMessage());
         assertEquals("E003", exception.getError().getCode());
+    }
+
+    @Test
+    void createEmployee_Success() {
+        Map<String, Object> employeeInput = new HashMap<>();
+        employeeInput.put("name", "John Doe");
+        employeeInput.put("salary", "50000");
+        employeeInput.put("age", "30");
+        CreateEmployee createEmployee = new CreateEmployee(1,"Virat Kohli", "50000", "30");
+        CreateEmployeeDTO createEmployeeDTO = CreateEmployeeInputValidator.convertAndValidateEmployeeInput(employeeInput);
+        when(employeeAPI.createEmployee(createEmployeeDTO)).thenReturn(createEmployee);
+
+        CreateEmployee createEmployeeFromServer = employeeService.createEmployee(employeeInput);
+
+        assertNotNull(createEmployeeFromServer);
+        assertEquals(createEmployee,createEmployeeFromServer);
     }
 }

@@ -2,6 +2,9 @@ package com.example.rqchallenge.employees.controllers;
 
 import com.example.rqchallenge.employees.exceptions.CustomError;
 import com.example.rqchallenge.employees.exceptions.CustomException;
+import com.example.rqchallenge.employees.models.CreateEmployee;
+import com.example.rqchallenge.employees.models.CreateEmployeeDTO;
+import com.example.rqchallenge.employees.models.CreateEmployeeResponse;
 import com.example.rqchallenge.employees.models.Employee;
 import com.example.rqchallenge.employees.service.EmployeeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,10 +19,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -143,5 +149,27 @@ public class EmployeeControllerImplementationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(employee)));
+    }
+
+    @Test
+    void addEmployee_Success() throws Exception {
+        Map<String, Object> employeeInput = new HashMap<>();
+        employeeInput.put("name", "John Doe");
+        employeeInput.put("salary", "50000");
+        employeeInput.put("age", "30");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = objectMapper.writeValueAsString(employeeInput);
+
+        CreateEmployee createEmployee = new CreateEmployee(1,"Virat Kohli", "50000", "30");
+
+        when(employeeService.createEmployee(employeeInput)).thenReturn(createEmployee);
+
+        String createEmployeeUrl = baseUrl + "/create";
+        mockMvc.perform(post(createEmployeeUrl)
+                        .contentType("application/json")
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().string(objectMapper.writeValueAsString(createEmployee)));
     }
 }

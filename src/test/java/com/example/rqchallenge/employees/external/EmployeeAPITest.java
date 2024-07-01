@@ -2,8 +2,7 @@ package com.example.rqchallenge.employees.external;
 
 import com.example.rqchallenge.employees.exceptions.CustomError;
 import com.example.rqchallenge.employees.exceptions.CustomException;
-import com.example.rqchallenge.employees.models.Employee;
-import com.example.rqchallenge.employees.models.EmployeeResponse;
+import com.example.rqchallenge.employees.models.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,9 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -36,9 +33,11 @@ public class EmployeeAPITest {
 
     private String allEmployeesJson;
     private String employeeJson;
+    private String createEmployeeJson;
 
     private final String getEmployeesUrl = BASE_URL + "/employees";
     private final String getEmployeeByIdUrl = BASE_URL + "/employee";
+    private final String createEmployeeUrl = BASE_URL + "/create";
 
     @BeforeEach
     void setUp() {
@@ -48,12 +47,13 @@ public class EmployeeAPITest {
                 "] }";
 
         employeeJson = "{ \"status\": \"success\", \"data\": { \"id\": \"1\", \"employee_name\": \"Virat Kohli\", \"employee_salary\": \"50000\", \"employee_age\": \"30\", \"profile_image\": \"\" } }";
+        createEmployeeJson = "{ \"status\": \"success\", \"data\": { \"id\": \"1\", \"employee_name\": \"Virat Kohli\", \"employee_salary\": \"50000\", \"employee_age\": \"30\", \"profile_image\": \"\" } }";
     }
 
     @Test
     void getAllEmployees_Success() throws JsonProcessingException {
         Employee employee = new Employee(
-                "1", "John Doe", "30", "50000"
+                "1", "Virat Kohli", "30", "50000"
         );
         EmployeeResponse employeeResponse = new EmployeeResponse("success", List.of(employee));
 
@@ -64,7 +64,7 @@ public class EmployeeAPITest {
 
         assertNotNull(employees);
         assertEquals(1, employees.size());
-        assertEquals("John Doe", employees.get(0).getName());
+        assertEquals("Virat Kohli", employees.get(0).getName());
     }
 
     @Test
@@ -131,6 +131,65 @@ public class EmployeeAPITest {
 
         CustomException exception = assertThrows(CustomException.class, () -> {
             employeeAPI.getEmployeeById("1");
+        });
+
+        assertEquals(CustomError.JSON_PROCESSING_ERROR, exception.getError());
+        assertEquals("Error while processing JSON", exception.getMessage());
+        assertEquals("E002", exception.getError().getCode());
+    }
+
+    @Test
+    void createEmployee_Success() throws JsonProcessingException {
+        CreateEmployeeDTO createEmployeeDTO = new CreateEmployeeDTO();
+        createEmployeeDTO.setName("Virat Kohli");
+        createEmployeeDTO.setSalary("50000");
+        createEmployeeDTO.setAge("30");
+        String jsonResponse = "{\"status\":\"success\",\"data\":{\"name\":\"Virat Kohli\",\"salary\":\"50000\",\"age\":\"30\"}}";
+        CreateEmployee createEmployee = new CreateEmployee(1,"Virat Kohli", "50000", "30");
+        CreateEmployeeResponse createEmployeeResponse = new CreateEmployeeResponse("success",createEmployee);
+
+        when(restTemplate.postForObject(createEmployeeUrl,createEmployeeDTO, String.class)).thenReturn(jsonResponse);
+        when(objectMapper.readValue(jsonResponse,CreateEmployeeResponse.class)).thenReturn(createEmployeeResponse);
+
+        CreateEmployee result = employeeAPI.createEmployee(createEmployeeDTO);
+
+        assertNotNull(result);
+        assertEquals("Virat Kohli", result.getName());
+        assertEquals("50000", result.getSalary());
+        assertEquals("30", result.getAge());
+    }
+
+    @Test
+    void createEmployee_RestClientException() {
+        CreateEmployeeDTO createEmployeeDTO = new CreateEmployeeDTO();
+        createEmployeeDTO.setName("Virat Kohli");
+        createEmployeeDTO.setSalary("50000");
+        createEmployeeDTO.setAge("30");
+
+        when(restTemplate.postForObject(createEmployeeUrl,createEmployeeDTO, String.class)).thenThrow(new RestClientException("Error"));
+
+        CustomException exception = assertThrows(CustomException.class, () -> {
+            employeeAPI.createEmployee(createEmployeeDTO);
+        });
+
+        assertEquals(CustomError.REST_CLIENT_ERROR, exception.getError());
+        assertEquals("Error while making a Rest API call", exception.getMessage());
+        assertEquals("E001", exception.getError().getCode());
+    }
+
+    @Test
+    void createEmployee_JsonParsingException() throws JsonProcessingException {
+        CreateEmployeeDTO createEmployeeDTO = new CreateEmployeeDTO();
+        createEmployeeDTO.setName("Virat Kohli");
+        createEmployeeDTO.setSalary("50000");
+        createEmployeeDTO.setAge("30");
+        String jsonResponse = "{\"status\":\"success\",\"data\":{\"name\":\"Virat Kohli\",\"salary\":\"50000\",\"age\":\"30\"}}";
+
+        when(restTemplate.postForObject(createEmployeeUrl,createEmployeeDTO, String.class)).thenReturn(jsonResponse);
+        when(objectMapper.readValue(jsonResponse,CreateEmployeeResponse.class)).thenThrow(new JsonProcessingException("Error"){});
+
+        CustomException exception = assertThrows(CustomException.class, () -> {
+            employeeAPI.createEmployee(createEmployeeDTO);
         });
 
         assertEquals(CustomError.JSON_PROCESSING_ERROR, exception.getError());

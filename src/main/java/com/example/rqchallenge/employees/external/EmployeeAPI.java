@@ -2,8 +2,7 @@ package com.example.rqchallenge.employees.external;
 
 import com.example.rqchallenge.employees.exceptions.CustomError;
 import com.example.rqchallenge.employees.exceptions.CustomException;
-import com.example.rqchallenge.employees.models.Employee;
-import com.example.rqchallenge.employees.models.EmployeeResponse;
+import com.example.rqchallenge.employees.models.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -65,4 +64,23 @@ public class EmployeeAPI {
         }
     }
 
+    public CreateEmployee createEmployee(CreateEmployeeDTO createEmployeeDTO) {
+        try {
+            String externalUrl =  BASE_URL + "/create";
+            log.info("calling external api at to get all employees "  + externalUrl );
+            String response = restTemplate.postForObject(externalUrl, createEmployeeDTO, String.class);
+            log.info("Successfully fetched response from api: {}", response);
+
+            CreateEmployeeResponse createEmployeeResponse = objectMapper.readValue(response, CreateEmployeeResponse.class);
+            log.info("Successfully parsed response: {}", createEmployeeResponse);
+
+            return createEmployeeResponse.getData();
+        } catch (RestClientException e) {
+            log.error("Error while fetching all employees " + e.getMessage(), e);
+            throw new CustomException(CustomError.REST_CLIENT_ERROR);
+        } catch (JsonProcessingException e) {
+            log.error("Error while parsing employees response " + e.getMessage(), e);
+            throw new CustomException(CustomError.JSON_PROCESSING_ERROR);
+        }
+    }
 }

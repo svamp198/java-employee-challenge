@@ -1,6 +1,7 @@
 package com.example.rqchallenge.employees.controllers;
 
 
+import com.example.rqchallenge.employees.models.CreateEmployee;
 import com.example.rqchallenge.employees.models.Employee;
 import com.example.rqchallenge.employees.service.EmployeeService;
 import lombok.extern.slf4j.Slf4j;
@@ -50,9 +51,9 @@ public class EmployeeControllerImplementation implements IEmployeeController {
         return ResponseEntity.ok(employeeService.getEmployeeById(id));
     }
 
-    @Override
-    public ResponseEntity<Employee> createEmployee(Map<String, Object> employeeInput) {
-        return null;
+    @PostMapping("/create")
+    public ResponseEntity<CreateEmployee> createEmployee(Map<String, Object> employeeInput) {
+        return ResponseEntity.ok(employeeService.createEmployee(employeeInput));
     }
 
     @Override

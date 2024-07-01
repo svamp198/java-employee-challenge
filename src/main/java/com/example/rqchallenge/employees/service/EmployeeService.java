@@ -2,12 +2,18 @@ package com.example.rqchallenge.employees.service;
 
 import com.example.rqchallenge.employees.exceptions.CustomError;
 import com.example.rqchallenge.employees.exceptions.CustomException;
+import com.example.rqchallenge.employees.exceptions.ValidationException;
 import com.example.rqchallenge.employees.external.EmployeeAPI;
+import com.example.rqchallenge.employees.models.CreateEmployee;
+import com.example.rqchallenge.employees.models.CreateEmployeeDTO;
 import com.example.rqchallenge.employees.models.Employee;
+import com.example.rqchallenge.employees.validator.CreateEmployeeInputValidator;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -66,4 +72,8 @@ public class EmployeeService {
         return employee;
     }
 
+    public CreateEmployee createEmployee(Map<String, Object> employeeInput) {
+            CreateEmployeeDTO createEmployeeDTO = CreateEmployeeInputValidator.convertAndValidateEmployeeInput(employeeInput);
+            return employeeAPI.createEmployee(createEmployeeDTO);
+    }
 }
