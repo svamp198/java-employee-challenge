@@ -44,4 +44,25 @@ public class EmployeeAPI {
             throw new CustomException(CustomError.JSON_PROCESSING_ERROR);
         }
     }
+
+    public Employee getEmployeeById(String id) {
+        try {
+            String externalUrl =  BASE_URL + "/employee/" + id;
+            log.info("calling external api at to get all employees "  + externalUrl );
+            String response = restTemplate.getForObject(externalUrl, String.class);
+            log.info("Successfully fetched response from api: {}", response);
+
+            EmployeeResponse employeeResponse = objectMapper.readValue(response, EmployeeResponse.class);
+            log.info("Successfully parsed response: {}", employeeResponse);
+
+            return employeeResponse.getData().get(0);
+        } catch (RestClientException e) {
+            log.error("Error while fetching all employees " + e.getMessage(), e);
+            throw new CustomException(CustomError.REST_CLIENT_ERROR);
+        } catch (JsonProcessingException e) {
+            log.error("Error while parsing employees response " + e.getMessage(), e);
+            throw new CustomException(CustomError.JSON_PROCESSING_ERROR);
+        }
+    }
+
 }

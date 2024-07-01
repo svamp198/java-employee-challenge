@@ -47,7 +47,7 @@ public class EmployeeControllerImplementation implements IEmployeeController {
 
     @GetMapping("/employee/{id}")
     public ResponseEntity<Employee> getEmployeeById(@PathVariable String id) {
-        return null;
+        return ResponseEntity.ok(employeeService.getEmployeeById(id));
     }
 
     @Override

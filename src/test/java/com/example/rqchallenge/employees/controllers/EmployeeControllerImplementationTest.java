@@ -37,6 +37,8 @@ public class EmployeeControllerImplementationTest {
     private ObjectMapper objectMapper;
 
     private List<Employee> employees;
+
+    private Employee employee;
     private final String baseUrl = "/api/v1";
 
     @BeforeEach
@@ -45,6 +47,7 @@ public class EmployeeControllerImplementationTest {
                 new Employee("1","Virat Kohli","30","50000"),
                 new Employee("2","Rohit Sharma","40","70000")
         );
+        employee = new Employee("1","Virat Kohli","30","50000");
     }
 
     @Test
@@ -131,4 +134,14 @@ public class EmployeeControllerImplementationTest {
                 .andExpect(content().json(objectMapper.writeValueAsString(expectedTop10HighestEarningEmployeeNames)));
     }
 
+    @Test
+    void getEmployeeById_Success() throws Exception {
+        when(employeeService.getEmployeeById("1")).thenReturn(employee);
+
+        String getEmployeeByIdUrl = baseUrl + "/employee/1";
+        mockMvc.perform(get(getEmployeeByIdUrl)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(employee)));
+    }
 }

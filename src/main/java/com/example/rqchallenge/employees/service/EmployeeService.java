@@ -58,4 +58,12 @@ public class EmployeeService {
         return top10HighestEarningEmployeeNames;
     }
 
+    public Employee getEmployeeById(String id) {
+        Employee employee = employeeAPI.getEmployeeById(id);
+        if(employee == null)
+            throw new CustomException(CustomError.NO_DATA_FOUND);
+        log.info("Successfully found Employee with id : {}", employee);
+        return employee;
+    }
+
 }

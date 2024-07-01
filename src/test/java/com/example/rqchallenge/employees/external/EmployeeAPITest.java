@@ -35,8 +35,10 @@ public class EmployeeAPITest {
     private static final String BASE_URL = "https://dummy.restapiexample.com/api/v1";
 
     private String allEmployeesJson;
+    private String employeeJson;
 
     private final String getEmployeesUrl = BASE_URL + "/employees";
+    private final String getEmployeeByIdUrl = BASE_URL + "/employee";
 
     @BeforeEach
     void setUp() {
@@ -44,6 +46,8 @@ public class EmployeeAPITest {
                 "{ \"id\": \"1\", \"employee_name\": \"Virat Kohli\", \"employee_salary\": \"50000\", \"employee_age\": \"30\", \"profile_image\": \"\" }," +
                 "{ \"id\": \"2\", \"employee_name\": \"Rohit Sharma\", \"employee_salary\": \"70000\", \"employee_age\": \"40\", \"profile_image\": \"\" }" +
                 "] }";
+
+        employeeJson = "{ \"status\": \"success\", \"data\": { \"id\": \"1\", \"employee_name\": \"Virat Kohli\", \"employee_salary\": \"50000\", \"employee_age\": \"30\", \"profile_image\": \"\" } }";
     }
 
     @Test
@@ -84,6 +88,49 @@ public class EmployeeAPITest {
 
         CustomException exception = assertThrows(CustomException.class, () -> {
             employeeAPI.getAllEmployees();
+        });
+
+        assertEquals(CustomError.JSON_PROCESSING_ERROR, exception.getError());
+        assertEquals("Error while processing JSON", exception.getMessage());
+        assertEquals("E002", exception.getError().getCode());
+    }
+
+    @Test
+    void getEmployeeById_Success() throws JsonProcessingException {
+        Employee employee = new Employee(
+                "1", "Virat Kohli", "30", "50000"
+        );
+        EmployeeResponse employeeResponse = new EmployeeResponse("success", List.of(employee));
+
+        when(restTemplate.getForObject(getEmployeeByIdUrl + "/1", String.class)).thenReturn(employeeJson);
+        when(objectMapper.readValue(employeeJson, EmployeeResponse.class)).thenReturn(employeeResponse);
+
+        Employee employeeById = employeeAPI.getEmployeeById("1");
+
+        assertNotNull(employeeById);
+        assertEquals(employee, employeeById);
+    }
+
+    @Test
+    void getEmployeeById_RestClientException() {
+        when(restTemplate.getForObject(getEmployeeByIdUrl + "/1", String.class)).thenThrow(new RestClientException("Error while fetching record"));
+
+        CustomException exception = assertThrows(CustomException.class, () -> {
+            employeeAPI.getEmployeeById("1");
+        });
+
+        assertEquals(CustomError.REST_CLIENT_ERROR, exception.getError());
+        assertEquals("Error while making a Rest API call", exception.getMessage());
+        assertEquals("E001", exception.getError().getCode());
+    }
+
+    @Test
+    void getEmployeeById_JsonProcessingException() throws JsonProcessingException {
+        when(restTemplate.getForObject(getEmployeeByIdUrl + "/1", String.class)).thenReturn(employeeJson);
+        when(objectMapper.readValue(employeeJson, EmployeeResponse.class)).thenThrow(new JsonProcessingException("Error"){});
+
+        CustomException exception = assertThrows(CustomException.class, () -> {
+            employeeAPI.getEmployeeById("1");
         });
 
         assertEquals(CustomError.JSON_PROCESSING_ERROR, exception.getError());

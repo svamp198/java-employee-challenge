@@ -172,4 +172,24 @@ public class EmployeeServiceTest {
         assertEquals(6, top10HighestEarningEmployeeNames.size());
         assertEquals(expectedTop10HighestEarningEmployeeNames, top10HighestEarningEmployeeNames);
     }
+
+    @Test
+    void getEmployeesById() {
+        Employee virat = new Employee("1","Virat Kohli","30","50000");
+        EmployeeResponse employeeResponse = new EmployeeResponse("success", List.of(virat));
+        when(employeeAPI.getEmployeeById("1")).thenReturn(employeeResponse.getData().get(0));
+
+        Employee employee = employeeService.getEmployeeById("1");
+
+        assertEquals(virat, employee);
+    }
+
+    @Test
+    void getEmployeesById_NoMatchFound() {
+        CustomException exception = assertThrows(CustomException.class,() -> {
+            employeeService.getEmployeeById("4");
+        });
+        assertEquals("No Employees found", exception.getMessage());
+        assertEquals("E003", exception.getError().getCode());
+    }
 }
